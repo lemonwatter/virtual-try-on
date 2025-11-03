@@ -3,9 +3,11 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 import os
-# Anda mungkin perlu menambahkan import lain yang Anda gunakan di bagian bawah kode
+# Tambahkan import lain yang Anda gunakan (misalnya skimage, scipy, dll.)
+# from skimage.metrics import structural_similarity as ssim
+# import scipy.linalg
 
-# --- 1. KONFIGURASI DAN DATA STATIS (Diperbaiki) ---
+# --- 1. KONFIGURASI DAN DATA STATIS ---
 
 st.set_page_config(
     page_title="Virtual Try-On Sepatu",
@@ -16,7 +18,7 @@ st.set_page_config(
 if "selected_shoe" not in st.session_state:
     st.session_state.selected_shoe = None
 
-# Detail 4 Sepatu (Pastikan path gambar statis benar)
+# Detail 4 Sepatu (DIPERBAIKI: Pastikan path gambar statis menggunakan huruf kecil 'static/')
 SHOES = {
     "shoe_1": {"name": "DUNK LOW SEAN CLIVER", "price": "Rp1.150.000", "image_path": "static/shoe_1.jpg"},
     "shoe_2": {"name": "DUNK LOW BLEACHED AQUA", "price": "Rp7.200.000", "image_path": "static/shoe_2.jpg"},
@@ -24,7 +26,7 @@ SHOES = {
     "shoe_4": {"name": "DUNK LOW GREY FOG", "price": "Rp1.600.000", "image_path": "static/shoe_4.jpg"},
 }
 
-# Daftar Gambar Kaki Sampel (Pastikan path gambar statis benar)
+# Daftar Gambar Kaki Sampel (DIPERBAIKI: Pastikan path menggunakan huruf kecil 'static/')
 FOOT_SAMPLES = {
     "sample_1": "static/foot_sample_1.jpg",
     "sample_2": "static/foot_sample_2.jpg",
@@ -34,12 +36,11 @@ FOOT_SAMPLES = {
 IMG_SIZE = 256
 MODEL_PATH = 'models/pix2pix_tryon_G.h5'
 
-# --- 2. FUNGSI PEMUATAN MODEL DENGAN CACHE (PENTING!) ---
+# --- 2. FUNGSI PEMUATAN MODEL DENGAN CACHE (PENTING) ---
 
 # Menggunakan @st.cache_resource agar model HANYA dimuat sekali saat startup
 @st.cache_resource
 def load_generator_model(path):
-    # Ini akan tercetak di log Streamlit Cloud
     st.info(f"Memuat model generator dari: {path}. Tunggu sebentar...")
     try:
         # Pemuatan model Keras/TensorFlow
@@ -47,31 +48,31 @@ def load_generator_model(path):
         st.success("Model berhasil dimuat!")
         return model
     except Exception as e:
-        # Jika gagal memuat, cetak error di log dan tampilkan di Streamlit
         st.error(f"Gagal memuat model: {e}")
         st.stop() # Hentikan eksekusi jika gagal memuat model
         
 # Panggil fungsi ini untuk mendapatkan model yang sudah di-cache
 generator = load_generator_model(MODEL_PATH)
 
-# --- 3. FUNGSI PRAPROSES DAN TRY-ON (Sesuaikan dengan kode asli Anda) ---
+# --- 3. FUNGSI PRAPROSES DAN TRY-ON (Anda harus memastikan fungsi ini benar) ---
 
-# Tulis fungsi preprocessing (misalnya resize dan normalisasi)
 def preprocess_image(image_path, size):
+    # Pastikan file gambar ada sebelum dibuka
+    if not os.path.exists(image_path):
+        st.error(f"File gambar tidak ditemukan di path: {image_path}")
+        st.stop()
+        
     img = Image.open(image_path).convert('RGB').resize((size, size))
     img_array = np.array(img, dtype=np.float32)
-    # Normalisasi ke range [-1, 1] yang biasa digunakan untuk generator GAN
     img_array = (img_array / 127.5) - 1.0
     return np.expand_dims(img_array, axis=0)
 
-# Tulis fungsi utama try-on
 def perform_try_on(shoe_path, foot_path, generator_model):
     shoe_input = preprocess_image(shoe_path, IMG_SIZE)
     foot_input = preprocess_image(foot_path, IMG_SIZE)
 
-    # Gabungkan input (misalnya: concatenate atau stack input)
-    # Ini tergantung arsitektur model pix2pix Anda
-    # Jika model Anda mengambil 2 input, Anda harus memodifikasi bagian ini
+    # Gabungkan input (sesuaikan ini dengan input model Anda: 2 input atau 1 input gabungan)
+    # Ini adalah contoh untuk 1 input gabungan (channel terakhir)
     combined_input = np.concatenate([shoe_input, foot_input], axis=-1) 
 
     # Prediksi
@@ -83,7 +84,7 @@ def perform_try_on(shoe_path, foot_path, generator_model):
     
     return result_image
 
-# --- 4. TAMPILAN HALAMAN UTAMA/MODEL (Disimplifikasi) ---
+# --- 4. TAMPILAN HALAMAN UTAMA/MODEL ---
 
 def display_catalog_page():
     st.header("👟 SNEAKERSKU: Virtual Try-On")
@@ -93,7 +94,7 @@ def display_catalog_page():
 
     for i, (shoe_id, data) in enumerate(SHOES.items()):
         with cols[i]:
-            # Tampilkan gambar sepatu dari path relatif
+            # BARIS KRITIS (sekarang harusnya bekerja jika path benar)
             st.image(data['image_path'], use_column_width="auto")
             st.subheader(data['name'])
             
@@ -103,7 +104,7 @@ def display_catalog_page():
             # Tombol pilih sepatu
             if st.button("Pilih Sepatu", key=shoe_id):
                 st.session_state.selected_shoe = data
-                st.rerun() # Refresh halaman untuk pindah ke halaman Try-On
+                st.rerun() 
 
 # --- 5. TAMPILAN HALAMAN TRY-ON ---
 
@@ -162,5 +163,3 @@ if st.session_state.selected_shoe is None:
     display_catalog_page()
 else:
     display_try_on_page()
-
-# Tambahkan kode lain jika ada di bagian bawah
