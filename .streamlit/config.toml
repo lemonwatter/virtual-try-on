@@ -1,9 +1,2 @@
-[server]
-# Menonaktifkan peringatan Streamlit yang mungkin tidak relevan
-# Ini tidak wajib, tapi direkomendasikan
-# headless = true
-
 [git]
-# Ini adalah langkah PENTING: Jalankan 'git lfs pull' sebelum menjalankan app.py
-# Ini akan memaksa Streamlit Cloud mengunduh file pix2pix_tryon_G.h5
 postStartCommand = "git lfs pull"
